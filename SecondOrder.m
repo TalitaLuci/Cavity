@@ -1,23 +1,34 @@
 clc; clearvars; 
 
 % Dados fornecidos Ghia
-
+% coordenadas
 y_ghia = [1.0, 0.9766, 0.9688, 0.9609, 0.9531, 0.8516, 0.7344, 0.6172, 0.5, ...
      0.4531, 0.2813, 0.1719, 0.1016, 0.0703, 0.0625, 0.0547, 0.0];
-% u_ghia = [1.0, 0.84123, 0.78871, 0.73722, 0.68717, 0.23151, ...
-%         0.00332, -0.13641, -0.20581, -0.21090, -0.15662, -0.10150, ...
-%        -0.06434, -0.04775, -0.04192, -0.03717, 0.0]; %Re=100
+x_ghia = [1.0, 0.9688, 0.9609, 0.9531, 0.9453, 0.9063, 0.8594, 0.8047, ...
+      0.5, 0.2344, 0.2266, 0.1563, 0.0938, 0.0781, 0.0703, 0.0625, 0.0];
+% velocidades para Re = 10000
 u_ghia = [1.0, 0.47221, 0.47783, 0.48070, 0.47804, 0.34635, 0.20673, 0.08344, ...
     0.03111, -0.07540, -0.23186, -0.32709, -0.38000, -0.41657, ...
-     -0.42537, -0.42735, 0.0]; %Re = 10000
- x_ghia = [1.0, 0.9688, 0.9609, 0.9531, 0.9453, 0.9063, 0.8594, 0.8047, ...
-      0.5, 0.2344, 0.2266, 0.1563, 0.0938, 0.0781, 0.0703, 0.0625, 0.0];
- v_ghia = [0.0, -0.54302, -0.52987, -0.49099, -0.45863, -0.41496, -0.36737, ...
+     -0.42537, -0.42735, 0.0];
+v_ghia = [0.0, -0.54302, -0.52987, -0.49099, -0.45863, -0.41496, -0.36737, ...
      -0.30719, 0.00831, 0.27224, 0.28003, 0.35070, 0.41487, ...
-     0.43124, 0.43733, 0.43983, 0.0]; %Re = 10000
+     0.43124, 0.43733, 0.43983, 0.0];
+% velocidades para Re = 7500
+% v_ghia = [0.00000, -0.53858, -0.55216, -0.52347, -0.48590, ...
+%         -0.41050, -0.36213, -0.30448, 0.00824, 0.27348, ...
+%         0.28117, 0.35060, 0.41824, 0.43564, 0.44030, ...
+%         0.43979, 0.00000];
+% u_ghia = [1.00000, 0.47244, 0.47048, 0.47323, 0.47167, ...
+%         0.34228, 0.20591, 0.08342, -0.03800, -0.07503, ...
+%         -0.23176, -0.32393, -0.38324, -0.43025, -0.43590, ...
+%         -0.43154, 0.00000];
+% velocidades para Re = 100
 % v_ghia = [0.0, -0.05906, -0.07391, -0.08864, -0.10313, -0.16914, -0.22445, ...
 %    -0.24533, 0.05454, 0.17527, 0.17507, 0.16077, 0.12317, 0.10890, ...
-%    0.10091, 0.09233, 0.0]; %Re=100  
+%    0.10091, 0.09233, 0.0]; 
+% u_ghia = [1.0, 0.84123, 0.78871, 0.73722, 0.68717, 0.23151, ...
+%         0.00332, -0.13641, -0.20581, -0.21090, -0.15662, -0.10150, ...
+%        -0.06434, -0.04775, -0.04192, -0.03717, 0.0]; 
 
 
 % GENERAL FLOW CONSTANTS 
@@ -26,7 +37,7 @@ ly = lx;
 
 uLid  = .1/sqrt(3); % horizontal lid velocity 
 vLid  = 0;    % vertical lid velocity 
-Re    = 10000;  % Reynolds number 
+Re    = 7500;  % Reynolds number 
 nu    = uLid *(lx-1) / Re;     % kinematic viscosity 
 omega = 1. / (3*nu+1./2.); % relaxation parameter 
 maxT  = 10000000; % total number of iterations 500000
@@ -356,6 +367,7 @@ tau_xx = reshape ( ((cx.*cx-1/3)*reshape(fOut,9,lx*ly)), 1,lx,ly)-rho.*ux.*ux;
 tau_xy = reshape ( ((cx.*cy)*reshape(fOut,9,lx*ly)), 1,lx,ly)-rho.*ux.*uy;
 tau_yy = reshape ( ((cy.*cy-1/3)*reshape(fOut,9,lx*ly)), 1,lx,ly)-rho.*uy.*uy;
 
+% REGULARIZATION PROCEDURE 
 for i=1:9 
     cu = 3*(cx(i)*ux+cy(i)*uy);     
 
@@ -374,6 +386,9 @@ for i=1:9
 end
 
 ec(cycle) = .5*sum(sum(ux.^2+uy.^2))/(lx*ly*uLid*uLid);
+
+% Nome do GIF
+gif_filename = 'velocidade_animada.gif';
 
 % % VISUALIZATION
  if (mod(cycle,tPlot)==0)
@@ -399,18 +414,18 @@ ec(cycle) = .5*sum(sum(ux.^2+uy.^2))/(lx*ly*uLid*uLid);
     title('Velocidade nas Linhas Centrais');
     xlabel('Coordenada Normalizada');
     ylabel('Velocidade Normalizada');
-    drawnow     
+    drawnow 
+
+    % Salvar no GIF
+    if cycle == tPlot
+        imwrite(imind, cm, gif_filename, 'gif', 'Loopcount', inf, 'DelayTime', 0.2);
+    else
+        imwrite(imind, cm, gif_filename, 'gif', 'WriteMode', 'append', 'DelayTime', 0.2);
+    end
+
  end
 end
 toc
 
-plot(ec)
 
-save ldcRe1e4L065hor
-savefig('plotghia')
-
-%u = reshape(sqrt(ux.^2+uy.^2),lx,ly);
-%imagesc(u(:,ly:-1:1)'./uLid);
-%colorbar
-%axis equal off; drawnow
 

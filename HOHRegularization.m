@@ -13,6 +13,15 @@ u_ghia = [1.0, 0.47221, 0.47783, 0.48070, 0.47804, 0.34635, 0.20673, 0.08344, ..
 v_ghia = [0.0, -0.54302, -0.52987, -0.49099, -0.45863, -0.41496, -0.36737, ...
      -0.30719, 0.00831, 0.27224, 0.28003, 0.35070, 0.41487, ...
      0.43124, 0.43733, 0.43983, 0.0];
+% velocidades para Re = 7500
+% v_ghia = [0.00000, -0.53858, -0.55216, -0.52347, -0.48590, ...
+%         -0.41050, -0.36213, -0.30448, 0.00824, 0.27348, ...
+%         0.28117, 0.35060, 0.41824, 0.43564, 0.44030, ...
+%         0.43979, 0.00000];
+% u_ghia = [1.00000, 0.47244, 0.47048, 0.47323, 0.47167, ...
+%         0.34228, 0.20591, 0.08342, -0.03800, -0.07503, ...
+%         -0.23176, -0.32393, -0.38324, -0.43025, -0.43590, ...
+%         -0.43154, 0.00000];
 % velocidades para Re = 100
 % v_ghia = [0.0, -0.05906, -0.07391, -0.08864, -0.10313, -0.16914, -0.22445, ...
 %    -0.24533, 0.05454, 0.17527, 0.17507, 0.16077, 0.12317, 0.10890, ...
@@ -27,7 +36,7 @@ ly = lx;
 
 uLid  = .1/sqrt(3); % horizontal lid velocity 
 vLid  = 0;    % vertical lid velocity 
-Re    = 10000;  % Reynolds number 100 or 10000
+Re    = 7500;  % Reynolds number 100 or 10000
 nu    = uLid *(lx-1) / Re;     % kinematic viscosity 
 omega = 1. / (3*nu+1./2.); % relaxation parameter 
 maxT  = 1000000000; % total number of iterations 500000
@@ -45,13 +54,6 @@ fIn = reshape( w' * ones(1,lx*ly), 9, lx, ly);
 
 % MAIN LOOP (TIME CYCLES) 
 tic
-
-%video
-%videoNome = 'HORR.mp4'; 
-%vidObj = VideoWriter(videoNome, 'MPEG-4');
-%vidObj.FrameRate = 30; % utlizar 30 ou 60
-%open(vidObj);
-%hFig = figure;
 
 for cycle = 1:maxT 
 
@@ -142,12 +144,13 @@ rhoprime_ux = rhoprime * uLid;
 
 for i=1:9 
     fIn(i,2:(lx-1),ly) =  w(i) * ... 
-        ( rhoprime + 3*cx(i)*rhoprime_ux +...
+        (rhoprime + 3*cx(i)*rhoprime_ux +...
         9/2*(cx(i)*cx(i)-1/3)*rho_m20prime + ...
         9/2*(cy(i)*cy(i)-1/3)*rho_m02prime + ...    
         9*cx(i)*cy(i)*rho_m11prime + ...
         27/2 * (2 * uLid * rho_m11prime) * (cx(i)^2 - 1/3) * cy(i) + ...
-        27/2 * (uLid * rho_m02prime) * (cy(i)^2 - 1/3) * cx(i));
+        27/2 * (uLid * rho_m02prime) * (cy(i)^2 - 1/3) * cx(i) + ...
+        81/4 * (rho_m02prime*uLid*uLid) * (cx(i)^2 - 1/3) * (cy(i)^2 - 1/3));
 end
 
 % END OF BOUNDARY CONDITIONS - TOP WALL
@@ -367,12 +370,12 @@ tau_yy = reshape ( ((cy.*cy-1/3)*reshape(fOut,9,lx*ly)), 1,lx,ly)-rho.*uy.*uy;
 % m20star = reshape ( ((cx.*cx -1/3)* reshape(fOut,9,lx*ly)), 1,lx,ly ) ./rho;
 % m11star = reshape ( ((cx.*cy)* reshape(fOut,9,lx*ly)), 1,lx,ly ) ./rho;
 % m02star = reshape ( ((cy.*cy -1/3)* reshape(fOut,9,lx*ly)), 1,lx,ly ) ./rho;
-% 
 
-% REGULARIZATION PROCEDURE
+
+% REGULARIZATION PROCEDURE 
+%fOut(i,:,:) = fEq(i,:,:)+fnEq(i,:,:);
 for i=1:9 
     cu = 3*(cx(i)*ux+cy(i)*uy);     
-
     fEq(i,:,:) = rho .* w(i) .* ... 
         ( 1 + cu + 1/2*(cu.*cu) - 3/2*(ux.^2+uy.^2) + ...
         27/2*ux.^2.*uy*(cx(i)^2-1/3)*cy(i)+ ...
